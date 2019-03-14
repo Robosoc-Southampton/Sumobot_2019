@@ -1,0 +1,3 @@
+#ignore .vscode (settings for vscode)
+src/.vscode
+
