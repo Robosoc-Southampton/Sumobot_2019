@@ -38,72 +38,71 @@ int32_t turn = 0;
 L298 motor;
 
 void setup() {
-  // put your setup code here, to run once:
-  pinMode(CH1_PIN, INPUT);
-  pinMode(CH2_PIN, INPUT);
-  // pinMode(CH3_PIN, INPUT); //TODO uncomment for switch and left stick
-  // pinMode(CH4_PIN, INPUT);
-  Serial.begin(9600);
+    // put your setup code here, to run once:
+    pinMode(CH1_PIN, INPUT);
+    pinMode(CH2_PIN, INPUT);
+    // pinMode(CH3_PIN, INPUT); //TODO uncomment for switch and left stick
+    // pinMode(CH4_PIN, INPUT);
+    Serial.begin(9600);
 
-  //motors control initialization, change the pins maybe
-  motor.setLeftMotorPins(ENA, IN1, IN2);
-  motor.setRightMotorPins(ENB, IN3, IN4);
-  motor.setup();
+    //motors control initialization, change the pins maybe
+    motor.setLeftMotorPins(ENA, IN1, IN2);
+    motor.setRightMotorPins(ENB, IN3, IN4);
+    motor.setup();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  value_speed = pulseIn(CH2_PIN, HIGH);
-  value_turn = pulseIn(CH1_PIN, HIGH);
-  Serial.println(value_speed);
-  
-  //asssumes channel 2 to PIN 3
-  //rescaling of speed
-  value_speed = value_speed - CH2_MID;
-  Serial.println(value_mid);
-  speed = -(value_speed*255) / CH2_HALFRANGE;
-  Serial.println(speed);
+    // put your main code here, to run repeatedly:
+    value_speed = pulseIn(CH2_PIN, HIGH);
+    value_turn = pulseIn(CH1_PIN, HIGH);
+    Serial.println(value_speed);
 
-  //limiting so its not out of range
-  if(speed > 255)
-  {
-    speed = 255;
-  }else if(speed < -255)
-  {
-    speed = -255;
-  }
+    //asssumes channel 2 to PIN 3
+    //rescaling of speed
+    value_speed = value_speed - CH2_MID;
+    Serial.println(value_speed);
+    speed = -(value_speed*255) / CH2_HALFRANGE;
+    Serial.println(speed);
 
-  //rescaling of turn, differenc ebetween the motors.
-  //max to the one side, the other motor has opposite speed
-  value_turn = value_turn - CH1_MID;
-  turn = (value_turn * speed * 2) / CH1_HALFRANGE
+    //limiting so its not out of range
+    if(speed > 255)
+    {
+        speed = 255;
+    }else if(speed < -255)
+    {
+        speed = -255;
+    }
 
-  //limiting so its not out of range
-  if(turn > 510) //max speed * 2
-  {
-    turn = 510;
-  }else if(turn < -510)
-  {
-    turn = -510;
-  }
-  //set turn to 0 for too small values
-  if((turn < 40)&&(turn > -40))
-  {
-    turn = 0;
-  }
+    //rescaling of turn, differenc ebetween the motors.
+    //max to the one side, the other motor has opposite speed
+    value_turn = value_turn - CH1_MID;
+    turn = (value_turn * speed * 2) / CH1_HALFRANGE;
 
-  if(turn >0) //left motor changed, turn left
-  {
-    speed_turned = speed - turn;
-    motor.setRightMotorSpeed(speed);
-    motor.setLeftMotorSpeed(speed_turned)
-  }else//right motor changed, turn right
-  {
-    speed_turned = speed + turn;
-    motor.setRightMotorSpeed(speed_turned);
-    motor.setLeftMotorSpeed(speed)
-  }
-  //delay so the motors can actually move
-  delay(5);
+    //limiting so its not out of range
+    if(turn > 510) //max speed * 2
+    {
+        turn = 510;
+    }else if(turn < -510)
+    {
+        turn = -510;
+    }
+    //set turn to 0 for too small values
+    if((turn < 40)&&(turn > -40))
+    {
+        turn = 0;
+    }
 
+    if(turn >0) //left motor changed, turn left
+    {
+        speed_turned = speed - turn;
+        motor.setRightMotorSpeed(speed);
+        motor.setLeftMotorSpeed(speed_turned);
+    }else//right motor changed, turn right
+    {
+        speed_turned = speed + turn;
+        motor.setRightMotorSpeed(speed_turned);
+        motor.setLeftMotorSpeed(speed);
+    }
+    //delay so the motors can actually move
+    delay(5);
 }
