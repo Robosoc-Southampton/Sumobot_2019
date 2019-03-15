@@ -92,12 +92,12 @@ void loop() {
     turn = 0;
   }
 
-  if(turn >0) //left motor changed
+  if(turn >0) //left motor changed, turn left
   {
     speed_turned = speed - turn;
     motor.setRightMotorSpeed(speed);
     motor.setLeftMotorSpeed(speed_turned)
-  }else
+  }else//right motor changed, turn right
   {
     speed_turned = speed + turn;
     motor.setRightMotorSpeed(speed_turned);
