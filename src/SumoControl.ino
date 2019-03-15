@@ -79,12 +79,12 @@ void loop() {
   turn = (value_turn * speed * 2) / CH1_HALFRANGE
 
   //limiting so its not out of range
-  if(turn > 255)
+  if(turn > 510) //max speed * 2
   {
-    turn = 255;
-  }else if(turn < -255)
+    turn = 510;
+  }else if(turn < -510)
   {
-    turn = -255;
+    turn = -510;
   }
   //set turn to 0 for too small values
   if((turn < 40)&&(turn > -40))
