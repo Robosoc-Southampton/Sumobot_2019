@@ -8,13 +8,16 @@
 #define CH2_MID 1545
 #define CH2_HALFRANGE 380L
 
+//switch A, right
+#define CH3_MID 1200
+
 //Receiver PINS:
 //connect to channel 1 on receiver
 byte CH1_PIN = 11;
 //connect to channel 2 on receiver
 byte CH2_PIN = 10;
-// //connect to channel 3 on receiver //TODO implement switch
-// byte CH3_PIN = 9;
+//connect to channel 3 on receiver //TODO implement switch
+byte CH3_PIN = 9;
 // //connect to channel 4 on receiver //TODO implement left stick
 // byte CH4_PIN = 6;
 
@@ -30,17 +33,26 @@ byte ENB = 3;
 
 //driving
 int32_t value_speed = 0;
+int32_t prevvalue_speed = 0;
 int32_t speed = 0;
 int32_t speed_turned = 0;
+
 int32_t value_turn = 0;
+int32_t prevvalue_turn = 0;
 int32_t turn = 0;
+
+//switch A, right and left stick left-right, horizontal
+bool switch_down;
+int switch_value = 0;
+
 
 L298 motor;
 
 void setup() {
     // put your setup code here, to run once:
-    pinMode(CH1_PIN, INPUT);
-    pinMode(CH2_PIN, INPUT);
+    pinMode(CH1_PIN, INPUT); //turn
+    pinMode(CH2_PIN, INPUT); //speed
+    pinMode(CH3_PIN, INPUT); //switch A
     // pinMode(CH3_PIN, INPUT); //TODO uncomment for switch and left stick
     // pinMode(CH4_PIN, INPUT);
     Serial.begin(9600);
@@ -49,13 +61,45 @@ void setup() {
     motor.setLeftMotorPins(ENA, IN1, IN2);
     motor.setRightMotorPins(ENB, IN3, IN4);
     motor.setup();
+
+    switch_value = pulseIn(CH3_PIN, HIGH);
+    if(switch_value < CH3_MID)
+    {
+        switch_down = false;
+    }else
+    {
+        switch_down = true;
+    }
+
+    prevvalue_speed = pulseIn(CH2_PIN, HIGH);
+    prevvalue_turn = pulseIn(CH1_PIN, HIGH);
 }
 
 void loop() {
     // put your main code here, to run repeatedly:
+
+    //SWITCH A, RIGHT:
+    switch_value = pulseIn(CH3_PIN, HIGH);
+    if((switch_value < CH3_MID) && (switch_down == true))
+    {
+        Serial.println("switch turned up");
+        //TODO implement what happen when switch turned up
+    }else if((switch_value > CH3_MID) && (switch_down == false))
+    {
+        Serial.println("switch turned up");
+        //TODO implement what happen when switch turned up
+    }
+
+
+    //MOTORS:
     value_speed = pulseIn(CH2_PIN, HIGH);
     value_turn = pulseIn(CH1_PIN, HIGH);
     Serial.println(value_speed);
+
+    //start if of jittery prevention
+    // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
+    //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
+    // {
 
     //asssumes channel 2 to PIN 3
     //rescaling of speed
@@ -103,6 +147,12 @@ void loop() {
         motor.setRightMotorSpeed(speed_turned);
         motor.setLeftMotorSpeed(speed);
     }
+    prevvalue_speed = value_speed;
+    prevvalue_turn = value_turn;
+
+    // }
+    //end if of jittery prevention
+
     //delay so the motors can actually move
     delay(5);
 }
