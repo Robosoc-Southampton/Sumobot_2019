@@ -120,11 +120,11 @@ void setup() {
     if(switch_value < CH3_MID)//switch is up
     {
         switch_down = false;
-        sponge.step(SPONGE_DIFF); //TODO check direction
+
     }else //switch is down
     {
         switch_down = true;
-        sponge.step(-SPONGE_DIFF);
+        
     }
 
     //previous values from pilot of speed and turn
@@ -140,11 +140,14 @@ void loop() {
     if((switch_value < CH3_MID) && (switch_down == true))
     {
         Serial.println("switch turned up");
-        //TODO implement what happen when switch turned up
+
+        sponge.step(-SPONGE_DIFF); //TODO check direction
+        
     }else if((switch_value > CH3_MID) && (switch_down == false))
     {
         Serial.println("switch turned up");
-        //TODO implement what happen when switch turned up
+
+        sponge.step(SPONGE_DIFF);
     }
 
     //Left stick change
