@@ -142,7 +142,7 @@ void loop() {
         Serial.println("switch turned up");
 
         sponge.step(-SPONGE_DIFF); //TODO check direction
-        
+
     }else if((switch_value > CH3_MID) && (switch_down == false))
     {
         Serial.println("switch turned up");
@@ -183,7 +183,6 @@ void loop() {
     //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
     // {
  
-    //asssumes channel 2 to PIN 3
     //rescaling of speed
     value_speed = value_speed - CH2_MID;
     Serial.println(value_speed);
