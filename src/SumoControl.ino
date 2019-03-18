@@ -25,6 +25,7 @@
 
 //number of step between sponge up and down
 #define SPONGE_DIFF 10
+#define SPONGE_SPEED 100
 
 //Stepper motor PINS (sponge pusher)
 int stepperrevolution = 10;
@@ -101,7 +102,7 @@ void setup() {
     Serial.begin(9600);
 
     //Stepper motor speed TODO check if correct
-    sponge.setSpeed(100);
+    sponge.setSpeed(SPONGE_SPEED);
 
     //Servo initialization: PIN connection for servo
     leftservo.attach(9);
