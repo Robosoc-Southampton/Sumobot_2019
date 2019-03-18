@@ -97,8 +97,7 @@ void setup() {
     pinMode(CH1_PIN, INPUT); //turn
     pinMode(CH2_PIN, INPUT); //speed
     pinMode(CH3_PIN, INPUT); //switch A
-    // pinMode(CH3_PIN, INPUT); //TODO uncomment for switch and left stick
-    // pinMode(CH4_PIN, INPUT);
+    pinMode(CH4_PIN, INPUT); //left stick - sponge
     Serial.begin(9600);
 
     //Servo initialization: PIN connection for servo
