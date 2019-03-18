@@ -2,9 +2,11 @@
 #include <Servo.h>
 #include <Stepper.h>
 
+// REMEMBER THAT SERVOS NEED TO BE AT 90 WHEN PU INSIDE THE ROBOT
+
 //right stick, left-right (horizontal) - turning
 #define CH1_MID 1530
-#define CH1_HALFRANGE 400L
+#define CH1_HALFRANGE 390L
 
 //right stick, up-down (vertical) - drive
 #define CH2_MID 1545
@@ -19,7 +21,7 @@
 
 //Servos movement restriction (for left one)
 #define FLIP_RIGHTUP 10
-//#define FLIP_DOWn 0 (by default)
+
 
 //number of step between sponge up and down
 #define SPONGE_DIFF 10
@@ -32,9 +34,6 @@ byte IN2_STEPPER = A1;
 
 byte IN3_STEPPER = A2;
 byte IN4_STEPPER = A3;
-
-///minus pushes, plus lifts ??? TODO check that
-
 
 
 //Servos:
@@ -72,7 +71,8 @@ byte ENB = 2;
 L298 motor;
 
 //Stepper motor - sponge on bottom
-Stepper sponge(stepperrevolution, IN1STEPPER, IN2_STEPPER, IN3_STEPPER, IN4_STEPPER);
+Stepper sponge(stepperrevolution, IN1_STEPPER, IN2_STEPPER,
+                                    IN3_STEPPER, IN4_STEPPER);
 
 
 
@@ -108,6 +108,7 @@ void setup() {
     leftservo_pos = leftservo.read();
     rightservo_pos = rightservo.read();
 
+    //starting vlaues of servos
     down_leftservo_pos = leftservo_pos;
     down_rightservo_pos = rightservo_pos;
 
@@ -127,6 +128,7 @@ void setup() {
         sponge.step(-SPONGE_DIFF);
     }
 
+    //previous values from pilot of speed and turn
     prevvalue_speed = pulseIn(CH2_PIN, HIGH);
     prevvalue_turn = pulseIn(CH1_PIN, HIGH);
 }
@@ -148,7 +150,7 @@ void loop() {
 
     //Left stick change
     flip_value = pulseIn(CH4_PIN, HIGH);
-    if((flip_value <= CH4_LEFT)&&(leftservo_pos <= down_leftservo_pos)) //flip up
+    if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) //flip up
     {
         Serial.println("flip up");
         leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
@@ -157,7 +159,7 @@ void loop() {
         leftservo.write(leftservo_pos);
         rightservo.write(rightservo_pos);
 
-    }else if((flip_value >= CH4_RIGHT)&&(leftservo_pos >= down_leftservo_pos)) //flip down
+    }else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) //flip down
     {
         Serial.println("flip down");
         leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
