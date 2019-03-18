@@ -100,6 +100,9 @@ void setup() {
     pinMode(CH4_PIN, INPUT); //left stick - sponge
     Serial.begin(9600);
 
+    //Stepper motor speed TODO check if correct
+    sponge.setSpeed(100);
+
     //Servo initialization: PIN connection for servo
     leftservo.attach(9);
     rightservo.attach(10);
