@@ -1,4 +1,6 @@
 #include "L298.h"
+#include <Servo.h>
+#include <Stepper.h>
 
 //right stick, left-right (horizontal) - turning
 #define CH1_MID 1530
@@ -11,24 +13,67 @@
 //switch A, right
 #define CH3_MID 1200
 
+//left stick, left-right (horizontal) - flippity front
+#define CH4_LEFT 1400
+#define CH4_RIGHT 1540
+
+//Servos movement restriction (for left one)
+#define FLIP_RIGHTUP 10
+//#define FLIP_DOWn 0 (by default)
+
+//number of step between sponge up and down
+#define SPONGE_DIFF 10
+
+//Stepper motor PINS (sponge pusher)
+int stepperrevolution = 10;
+
+byte IN1_STEPPER = A0;
+byte IN2_STEPPER = A1;
+
+byte IN3_STEPPER = A2;
+byte IN4_STEPPER = A3;
+
+///minus pushes, plus lifts ??? TODO check that
+
+
+
+//Servos:
+Servo leftservo;
+Servo rightservo;
+
+int leftservo_pos = 0;
+int rightservo_pos = 0;
+
+int down_leftservo_pos = 0;
+int down_rightservo_pos = 0;
+
+
+
 //Receiver PINS:
 //connect to channel 1 on receiver
 byte CH1_PIN = 11;
 //connect to channel 2 on receiver
-byte CH2_PIN = 10;
-//connect to channel 3 on receiver //TODO implement switch
-byte CH3_PIN = 9;
-// //connect to channel 4 on receiver //TODO implement left stick
-// byte CH4_PIN = 6;
+byte CH2_PIN = 6;
+//connect to channel 3 on receiver
+byte CH3_PIN = 5;
+//connect to channel 4 on receiver
+byte CH4_PIN = 3;
 
 //Motors PINS:
-byte ENA = 5;
-byte IN1 = 7;
+byte ENA = 13;
+byte IN1 = 12;
 byte IN2 = 8;
 
-byte IN3 = 4;
-byte IN4 = 2;
-byte ENB = 3;
+byte IN3 = 7;
+byte IN4 = 4;
+byte ENB = 2;
+
+//Motors:
+L298 motor;
+
+//Stepper motor - sponge on bottom
+Stepper sponge(stepperrevolution, IN1STEPPER, IN2_STEPPER, IN3_STEPPER, IN4_STEPPER);
+
 
 
 //driving
@@ -44,9 +89,8 @@ int32_t turn = 0;
 //switch A, right and left stick left-right, horizontal
 bool switch_down;
 int switch_value = 0;
+int flip_value = 0;
 
-
-L298 motor;
 
 void setup() {
     // put your setup code here, to run once:
@@ -57,18 +101,30 @@ void setup() {
     // pinMode(CH4_PIN, INPUT);
     Serial.begin(9600);
 
+    //Servo initialization: PIN connection for servo
+    leftservo.attach(9);
+    rightservo.attach(10);
+
+    leftservo_pos = leftservo.read();
+    rightservo_pos = rightservo.read();
+
+    down_leftservo_pos = leftservo_pos;
+    down_rightservo_pos = rightservo_pos;
+
     //motors control initialization, change the pins maybe
     motor.setLeftMotorPins(ENA, IN1, IN2);
     motor.setRightMotorPins(ENB, IN3, IN4);
     motor.setup();
 
     switch_value = pulseIn(CH3_PIN, HIGH);
-    if(switch_value < CH3_MID)
+    if(switch_value < CH3_MID)//switch is up
     {
         switch_down = false;
-    }else
+        sponge.step(SPONGE_DIFF); //TODO check direction
+    }else //switch is down
     {
         switch_down = true;
+        sponge.step(-SPONGE_DIFF);
     }
 
     prevvalue_speed = pulseIn(CH2_PIN, HIGH);
@@ -90,6 +146,28 @@ void loop() {
         //TODO implement what happen when switch turned up
     }
 
+    //Left stick change
+    flip_value = pulseIn(CH4_PIN, HIGH);
+    if((flip_value <= CH4_LEFT)&&(leftservo_pos <= down_leftservo_pos)) //flip up
+    {
+        Serial.println("flip up");
+        leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
+        rightservo_pos = rightservo_pos + FLIP_RIGHTUP;
+
+        leftservo.write(leftservo_pos);
+        rightservo.write(rightservo_pos);
+
+    }else if((flip_value >= CH4_RIGHT)&&(leftservo_pos >= down_leftservo_pos)) //flip down
+    {
+        Serial.println("flip down");
+        leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
+        rightservo_pos = rightservo_pos - FLIP_RIGHTUP;
+
+        leftservo.write(leftservo_pos);
+        rightservo.write(rightservo_pos);
+    }
+
+
 
     //MOTORS:
     value_speed = pulseIn(CH2_PIN, HIGH);
@@ -100,7 +178,7 @@ void loop() {
     // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
     //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
     // {
-
+ 
     //asssumes channel 2 to PIN 3
     //rescaling of speed
     value_speed = value_speed - CH2_MID;
