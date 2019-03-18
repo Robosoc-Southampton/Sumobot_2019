@@ -33,6 +33,9 @@ Chanel5:
 Chanel6:
     -The same as Chanel1 (????)
 
+
+
+
 PINS:
 //Stepper motor PINS (sponge pusher)
 int stepperrevolution = 10;

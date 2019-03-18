@@ -20,7 +20,7 @@
 #define CH4_RIGHT 1540
 
 //Servos movement restriction (for left one)
-#define FLIP_RIGHTUP 10
+#define FLIP_RIGHTUP 45
 
 
 //number of step between sponge up and down
