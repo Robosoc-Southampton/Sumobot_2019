@@ -26,11 +26,11 @@
 
 
 //number of step between sponge up and down
-#define SPONGE_DIFF 10
-#define SPONGE_SPEED 100
+#define SPONGE_DIFF 100
+#define SPONGE_SPEED 200
 
 //Stepper motor PINS (sponge pusher)
-int stepperrevolution = 10;
+int stepperrevolution = 100;
 
 byte IN1_STEPPER = A0;
 byte IN2_STEPPER = A1;
@@ -169,12 +169,14 @@ void loop() {
         Serial.println("switch turned up");
 
         sponge.step(-SPONGE_DIFF); //TODO check direction
+        switch_down = false;
 
     }else if((switch_value > CH3_MID) && (switch_down == false))
     {
         Serial.println("switch turned up");
 
         sponge.step(SPONGE_DIFF);
+        switch_down = true;
     }
 
     //Left stick change
