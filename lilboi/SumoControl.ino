@@ -29,28 +29,14 @@
 #define SPONGE_DIFF 10
 #define SPONGE_SPEED 100
 
-//Stepper motor PINS (sponge pusher)
-int stepperrevolution = 10;
-
-byte IN1_STEPPER = A0;
-byte IN2_STEPPER = A1;
-
-byte IN3_STEPPER = A2;
-byte IN4_STEPPER = A3;
-
 
 //Servos:
-Servo leftservo;
-Servo rightservo;
+Servo tankservo;
 
-int leftservo_pos = 0;
-int rightservo_pos = 0;
+int tankservo_pos = 0;
 
-int leftservo_pos_next = 0;
-int rightservo_pos_next = 0;
+int tankservo_pos_next = 0;
 
-int down_leftservo_pos = 0;
-int down_rightservo_pos = 0;
 
 
 
@@ -76,11 +62,6 @@ byte ENB = 2;
 //Motors:
 L298 motor;
 
-//Stepper motor - sponge on bottom
-Stepper sponge(stepperrevolution, IN1_STEPPER, IN2_STEPPER,
-                                    IN3_STEPPER, IN4_STEPPER);
-
-
 
 //driving
 int32_t value_speed = 0;
@@ -95,25 +76,8 @@ int32_t turn = 0;
 //switch A, right and left stick left-right, horizontal
 bool switch_down;
 int switch_value = 0;
-int flip_value = 0;
+int leftstick_value = 0;
 
-//synchronous (almost) movement of front servos (flip thing)
-void flip_front(int dir_up) //1 if up, direction_up
-{
-    leftservo_pos_next = leftservo_pos - FLIP_RIGHTUP;
-    rightservo_pos_next = rightservo_pos + FLIP_RIGHTUP;
-    
-    //move by one each one until satisfieds
-    while((leftservo_pos != leftservo_pos_next) && (rightservo_pos != rightservo_pos_next))
-    {
-        leftservo_pos = leftservo_pos - dir_up;
-        rightservo_pos = rightservo_pos + dir_up;
-
-        leftservo.write(leftservo_pos);
-        rightservo.write(rightservo_pos);
-        delay(15); 
-    }
-}
 
 
 void setup() {
@@ -124,18 +88,15 @@ void setup() {
     pinMode(CH4_PIN, INPUT); //left stick - sponge
     Serial.begin(9600);
 
-    //Stepper motor speed TODO check if correct
-    sponge.setSpeed(SPONGE_SPEED);
 
     //Servo initialization: PIN connection for servo
-    leftservo.attach(9);
-    rightservo.attach(10);
+    tankservo.attach(9);
 
-    leftservo_pos = leftservo.read();
-    rightservo_pos = rightservo.read();
+
+    tankservo_pos = tankservo.read();
 
     //starting vlaues of servos
-    down_leftservo_pos = leftservo_pos;
+    down_tankservo_pos = tankservo_pos;
     down_rightservo_pos = rightservo_pos;
 
     //motors control initialization, change the pins maybe
@@ -168,40 +129,32 @@ void loop() {
     {
         Serial.println("switch turned up");
 
-        sponge.step(-SPONGE_DIFF); //TODO check direction
-
     }else if((switch_value > CH3_MID) && (switch_down == false))
     {
         Serial.println("switch turned up");
 
-        sponge.step(SPONGE_DIFF);
     }
 
-    //Left stick change
-    flip_value = pulseIn(CH4_PIN, HIGH);
-    if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) //flip up
+    //LEFT STICK, sideways
+    leftstick_value = pulseIn(CH4_PIN);
+
+    if(leftstick_value < CH4_LEFT)
     {
-        Serial.println("flip up");
-        // leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
-        // rightservo_pos = rightservo_pos + FLIP_RIGHTUP;
-
-        // leftservo.write(leftservo_pos);
-        // rightservo.write(rightservo_pos);
-        flip_front(FLIP_UP);
-
-    }else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) //flip down
+        tankservo_pos = tankservo + 5;
+        if(tankservo > 180) 
+        {
+            tankservo_pos = 180;
+        }
+        tankservo.write(tankservo_pos);
+    }else if(leftstick_value > CH4_RIGHT)
     {
-        Serial.println("flip down");
-        // leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
-        // rightservo_pos = rightservo_pos - FLIP_RIGHTUP;
-
-        // leftservo.write(leftservo_pos);
-        // rightservo.write(rightservo_pos);
-
-        flip_front(FLIP_DOWN);
+        tankservo_pos = tankservo - 5;
+        if(tankservo < 0) 
+        {
+            tankservo_pos = 0;
+        }
+        tankservo.write(tankservo_pos);
     }
-
-
 
     //MOTORS:
     value_speed = pulseIn(CH2_PIN, HIGH);
