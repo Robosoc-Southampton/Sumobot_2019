@@ -21,6 +21,8 @@
 
 //Servos movement restriction (for left one)
 #define FLIP_RIGHTUP 45
+#define FLIP_UP 1
+#define FLIP_DOWN -1
 
 
 //number of step between sponge up and down
@@ -43,6 +45,9 @@ Servo rightservo;
 
 int leftservo_pos = 0;
 int rightservo_pos = 0;
+
+int leftservo_pos_next = 0;
+int rightservo_pos_next = 0;
 
 int down_leftservo_pos = 0;
 int down_rightservo_pos = 0;
@@ -91,6 +96,24 @@ int32_t turn = 0;
 bool switch_down;
 int switch_value = 0;
 int flip_value = 0;
+
+//synchronous (almost) movement of front servos (flip thing)
+void flip_front(int dir_up) //1 if up, direction_up
+{
+    leftservo_pos_next = leftservo_pos - FLIP_RIGHTUP;
+    rightservo_pos_next = rightservo_pos + FLIP_RIGHTUP;
+    
+    //move by one each one until satisfieds
+    while((leftservo_pos != leftservo_pos_next) && (rightservo_pos != rightservo_pos_next))
+    {
+        leftservo_pos = leftservo_pos - dir_up;
+        rightservo_pos = rightservo_pos + dir_up;
+
+        leftservo.write(leftservo_pos);
+        rightservo.write(rightservo_pos);
+        delay(15);
+    }
+}
 
 
 void setup() {
@@ -159,20 +182,23 @@ void loop() {
     if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) //flip up
     {
         Serial.println("flip up");
-        leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
-        rightservo_pos = rightservo_pos + FLIP_RIGHTUP;
+        // leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
+        // rightservo_pos = rightservo_pos + FLIP_RIGHTUP;
 
-        leftservo.write(leftservo_pos);
-        rightservo.write(rightservo_pos);
+        // leftservo.write(leftservo_pos);
+        // rightservo.write(rightservo_pos);
+        flip_front(FLIP_UP);
 
     }else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) //flip down
     {
         Serial.println("flip down");
-        leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
-        rightservo_pos = rightservo_pos - FLIP_RIGHTUP;
+        // leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
+        // rightservo_pos = rightservo_pos - FLIP_RIGHTUP;
 
-        leftservo.write(leftservo_pos);
-        rightservo.write(rightservo_pos);
+        // leftservo.write(leftservo_pos);
+        // rightservo.write(rightservo_pos);
+
+        flip_front(FLIP_DOWN);
     }
 
 
