@@ -1,0 +1,8 @@
+PORT="$(ls /dev/tty* | grep "/dev/ttyACM\|/dev/ttyUSB" | sed -r 's@/dev/tty@@g' | head -n 1)"
+
+if [ -z $PORT ]; then
+	echo "No arduino plugged in"
+else
+	printf "\e[1;35mUsing detected port $PORT\e[0m\n"
+	arduino --upload --board arduino:avr:uno --pref build.path=./out --port /dev/tty$PORT $*
+fi

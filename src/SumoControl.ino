@@ -16,7 +16,7 @@
 #define CH2_MINVAL 1000L
 
 //switch A, right
-#define CH3_MID 1200
+#define CH3_MID 1400
 
 //left stick, left-right (horizontal) - flippity front
 #define CH4_LEFT 1400
@@ -29,8 +29,8 @@
 
 
 //number of step between sponge up and down
-#define SPONGE_DIFF 100
-#define SPONGE_SPEED 100//200
+#define SPONGE_DIFF 10
+#define SPONGE_SPEED 200
 
 //Stepper motor PINS (sponge pusher)
 int stepperrevolution = 20;//100;
@@ -103,21 +103,22 @@ int flip_value = 0;
 //synchronous (almost) movement of front servos (flip thing)
 void flip_front(int dir_up) //1 if up, direction_up
 {
-    leftservo_pos_next = leftservo_pos - FLIP_RIGHTUP;
-    rightservo_pos_next = rightservo_pos + FLIP_RIGHTUP;
+    // leftservo_pos_next = leftservo_pos - FLIP_RIGHTUP * dir_up;
+    leftservo_pos_next = leftservo_pos + FLIP_RIGHTUP * dir_up;
+    rightservo_pos_next = rightservo_pos + FLIP_RIGHTUP * dir_up;
     
     //move by one each one until satisfieds
     while((leftservo_pos != leftservo_pos_next) && (rightservo_pos != rightservo_pos_next))
     {
-        leftservo_pos = leftservo_pos - dir_up;
-        rightservo_pos = rightservo_pos + dir_up;
+        // leftservo_pos -= dir_up;
+        leftservo_pos += dir_up;
+        rightservo_pos += dir_up;
 
         leftservo.write(leftservo_pos);
         rightservo.write(rightservo_pos);
         delay(15); 
     }
 }
-
 
 void setup() {
     // put your setup code here, to run once:
@@ -168,62 +169,35 @@ void setup() {
 void loop() {
     // put your main code here, to run repeatedly:
 
-    //SWITCH A, RIGHT:
-    switch_value = pulseIn(CH3_PIN, HIGH);
-    if((switch_value < CH3_MID) && (switch_down == true))
-    {
+    switch_value = pulseIn(CH3_PIN, HIGH, 25000);
+
+    if (switch_value < CH3_MID - 100) {
         Serial.println("switch turned up");
-
-        sponge.step(-SPONGE_DIFF); //TODO check direction
-        switch_down = false;
-
-    }else if((switch_value > CH3_MID) && (switch_down == false))
-    {
+        sponge.step(-SPONGE_DIFF);
+    }
+    else if (switch_value > CH3_MID + 100) {
         Serial.println("switch turned up");
-
         sponge.step(SPONGE_DIFF);
-        switch_down = true;
     }
 
     //Left stick change
-    flip_value = pulseIn(CH4_PIN, HIGH);
-    if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) //flip up
-    {
+    flip_value = pulseIn(CH4_PIN, HIGH, 25000);
+
+    if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) {
         Serial.println("flip up");
-        // leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
-        // rightservo_pos = rightservo_pos + FLIP_RIGHTUP;
-
-        // leftservo.write(leftservo_pos);
-        // rightservo.write(rightservo_pos);
         flip_front(FLIP_UP);
-
-    }else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) //flip down
-    {
+    }
+    else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) {
         Serial.println("flip down");
-        // leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
-        // rightservo_pos = rightservo_pos - FLIP_RIGHTUP;
-
-        // leftservo.write(leftservo_pos);
-        // rightservo.write(rightservo_pos);
-
         flip_front(FLIP_DOWN);
     }
 
-
-
-    //MOTORS:
-    value_speed = pulseIn(CH2_PIN, HIGH);
-    value_turn = pulseIn(CH1_PIN, HIGH);
+    value_speed = pulseIn(CH2_PIN, HIGH, 25000);
+    value_turn = pulseIn(CH1_PIN, HIGH, 25000);
     Serial.println(value_speed);
 
-    //start if of jittery prevention
-    // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
-    //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
-    // {
-    
     //safety measure if receiver disconnected
-    if((value_speed <= CH2_MAXVAL) && (value_speed >= CH2_MINVAL))
-    {
+    if (value_speed <= CH2_MAXVAL && value_speed >= CH2_MINVAL) {
         //rescaling of speed
         value_speed = value_speed - CH2_MID;
         Serial.println(value_speed);
@@ -231,11 +205,10 @@ void loop() {
         Serial.println(speed);
 
         //limiting so its not out of range
-        if(speed > 255)
-        {
+        if (speed > 255) {
             speed = 255;
-        }else if(speed < -255)
-        {
+        }
+        else if (speed < -255) {
             speed = -255;
         }
 
@@ -245,53 +218,45 @@ void loop() {
         turn = (value_turn * speed * 2) / CH1_HALFRANGE;
 
         //limiting so its not out of range
-        if(turn > 510) //max speed * 2
-        {
+        if (turn > 510) {
             turn = 510;
-        }else if(turn < -510)
-        {
+        }
+        else if (turn < -510) {
             turn = -510;
         }
-        //set turn to 0 for too small values
-        if((turn < 40)&&(turn > -40))
-        {
+        
+        if (turn < 40 && turn > -40) {
             turn = 0;
         }
 
-        if((turn > 0) && (speed > 0)) //left motor changed, turn left when forward
-        {
+        if (turn > 0 && speed > 0) {
             speed_turned = speed - turn;
             motor.setRightMotorSpeed(speed);
             motor.setLeftMotorSpeed(speed_turned);
-        }else if((turn < 0) && (speed > 0)) //right motor changed, turn right when forward
-        {
+        }
+        else if (turn < 0 && speed > 0) {
             speed_turned = speed + turn;
             motor.setRightMotorSpeed(speed_turned);
             motor.setLeftMotorSpeed(speed);
-        }else if((turn > 0) && (speed < 0)) //left motor changed, turn left when backward
-        {
+        }
+        else if (turn > 0 && speed < 0) {
             speed_turned = speed + turn;
             motor.setRightMotorSpeed(speed);
             motor.setLeftMotorSpeed(speed_turned);
-        }else if((turn < 0) && (speed < 0)) //left motor changed, turn right when backward
-        {
+        }
+        else if (turn < 0 && speed < 0) {
             speed_turned = speed - turn;
             motor.setRightMotorSpeed(speed_turned);
             motor.setLeftMotorSpeed(speed);
-        }else
-        {
+        }
+        else {
             motor.setMotorSpeed(speed);
         }
         
         prevvalue_speed = value_speed;
         prevvalue_turn = value_turn;
-    }else
-    {
+    }
+    else {
         motor.setMotorSpeed(0);
     }
-    // }
-    //end if of jittery prevention
-
-    //delay so the motors can actually move
-    delay(5);
 }
