@@ -4,6 +4,8 @@
 
 // REMEMBER THAT SERVOS NEED TO BE AT 90 WHEN PUT INSIDE THE ROBOT
 
+#define PULSEIN_TIMEOUT 25000
+
 //right stick, left-right (horizontal) - turning
 #define CH1_MID 1530
 #define CH1_HALFRANGE 390L
@@ -149,7 +151,7 @@ void setup() {
     motor.setRightMotorPins(ENB, IN3, IN4);
     motor.setup();
 
-    switch_value = pulseIn(CH3_PIN, HIGH);
+    switch_value = pulseIn(CH3_PIN, HIGH, PULSEIN_TIMEOUT);
     if(switch_value < CH3_MID)//switch is up
     {
         switch_down = false;
@@ -160,16 +162,42 @@ void setup() {
         
     }
 
+
+    for (int pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+        // in steps of 1 degree
+        leftservo.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(15);                       // waits 15ms for the servo to reach the position
+    }
+    for (int pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        leftservo.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(15);                       // waits 15ms for the servo to reach the position
+    }
+
+    for (int pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+        // in steps of 1 degree
+        rightservo.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(15);                       // waits 15ms for the servo to reach the position
+    }
+    for (int pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        rightservo.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(15);                       // waits 15ms for the servo to reach the position
+    }
+
+    rightservo.write(90);
+    leftservo.write(90);
+    // tankservo.write(0);
+
+
     //previous values from pilot of speed and turn
-    prevvalue_speed = pulseIn(CH2_PIN, HIGH);
-    prevvalue_turn = pulseIn(CH1_PIN, HIGH);
+    prevvalue_speed = pulseIn(CH2_PIN, HIGH, PULSEIN_TIMEOUT);
+    prevvalue_turn = pulseIn(CH1_PIN, HIGH, PULSEIN_TIMEOUT);
 }
 
 void loop() {
     // put your main code here, to run repeatedly:
 
     //SWITCH A, RIGHT:
-    switch_value = pulseIn(CH3_PIN, HIGH);
+    switch_value = pulseIn(CH3_PIN, HIGH, PULSEIN_TIMEOUT);
     if((switch_value < CH3_MID) && (switch_down == true))
     {
         Serial.println("switch turned up");
@@ -186,7 +214,7 @@ void loop() {
     }
 
     //Left stick change
-    flip_value = pulseIn(CH4_PIN, HIGH);
+    flip_value = pulseIn(CH4_PIN, HIGH, PULSEIN_TIMEOUT);
     if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) //flip up
     {
         Serial.println("flip up");
@@ -212,8 +240,8 @@ void loop() {
 
 
     //MOTORS:
-    value_speed = pulseIn(CH2_PIN, HIGH);
-    value_turn = pulseIn(CH1_PIN, HIGH);
+    value_speed = pulseIn(CH2_PIN, HIGH, PULSEIN_TIMEOUT);
+    value_turn = pulseIn(CH1_PIN, HIGH, PULSEIN_TIMEOUT);
     Serial.println(value_speed);
 
     //start if of jittery prevention
