@@ -33,7 +33,7 @@
 #define SPONGE_SPEED 100//200
 
 //Stepper motor PINS (sponge pusher)
-int stepperrevolution = 20//100;
+int stepperrevolution = 20;//100;
 
 byte IN1_STEPPER = A0;
 byte IN2_STEPPER = A1;
@@ -280,7 +280,7 @@ void loop() {
             motor.setLeftMotorSpeed(speed);
         }else
         {
-            motor.setMotorSpeed(0);
+            motor.setMotorSpeed(speed);
         }
         
         prevvalue_speed = value_speed;

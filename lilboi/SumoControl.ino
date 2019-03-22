@@ -1,6 +1,6 @@
 #include "L298.h"
 #include <Servo.h>
-#include <Stepper.h>
+
 
 // REMEMBER THAT SERVOS NEED TO BE AT 90 WHEN PUT INSIDE THE ROBOT
 
@@ -86,7 +86,7 @@ void setup() {
     pinMode(CH2_PIN, INPUT); //speed
     pinMode(CH3_PIN, INPUT); //switch A
     pinMode(CH4_PIN, INPUT); //left stick - sponge
-    //Serial.begin(9600);
+    Serial.begin(9600);
 
 
     //Servo initialization: PIN connection for servo
@@ -96,9 +96,9 @@ void setup() {
 
     tankservo_pos = tankservo.read();
 
-    //starting vlaues of servos
-    down_tankservo_pos = tankservo_pos;
-    down_rightservo_pos = rightservo_pos;
+    // //starting values of servos
+    // down_tankservo_pos = tankservo_pos;
+    // down_rightservo_pos = rightservo_pos;
 
     //motors control initialization, change the pins maybe
     motor.setLeftMotorPins(ENA, IN1, IN2);
@@ -128,39 +128,38 @@ void loop() {
     switch_value = pulseIn(CH3_PIN, HIGH);
     if((switch_value < CH3_MID) && (switch_down == true))
     {
-        //Serial.println("switch turned up");
+        Serial.println("switch turned up");
 
     }else if((switch_value > CH3_MID) && (switch_down == false))
     {
-        //Serial.println("switch turned up");
+        Serial.println("switch turned up");
 
     }
 
     //LEFT STICK, sideways
-    leftstick_value = pulseIn(CH4_PIN);
+    leftstick_value = pulseIn(CH4_PIN, HIGH);
 
     if(leftstick_value < CH4_LEFT)
     {
-        tankservo_pos = tankservo + 5;
-        if(tankservo > 180) 
+        tankservo_pos = tankservo_pos + 5;
+        if(tankservo_pos > 180) 
         {
             tankservo_pos = 180;
         }
-        tankservo.write(tankservo_pos);
     }else if(leftstick_value > CH4_RIGHT)
     {
-        tankservo_pos = tankservo - 5;
-        if(tankservo < 0) 
+        tankservo_pos = tankservo_pos - 5;
+        if(tankservo_pos < 0) 
         {
             tankservo_pos = 0;
         }
-        tankservo.write(tankservo_pos);
     }
+    tankservo.write(tankservo_pos);
 
     //MOTORS:
     value_speed = pulseIn(CH2_PIN, HIGH);
     value_turn = pulseIn(CH1_PIN, HIGH);
-    //Serial.println(value_speed);
+    Serial.println(value_speed);
 
     //start if of jittery prevention
     // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
@@ -169,9 +168,9 @@ void loop() {
  
     //rescaling of speed
     value_speed = value_speed - CH2_MID;
-    //Serial.println(value_speed);
+    Serial.println(value_speed);
     speed = -(value_speed*255) / CH2_HALFRANGE;
-    //Serial.println(speed);
+    Serial.println(speed);
 
     //limiting so its not out of range
     if(speed > 255)
@@ -201,12 +200,12 @@ void loop() {
         turn = 0;
     }
 
-    if((turn > 0) && (speed > 0)) //left motor changed, turn left when forward
+    if((turn > 0) && (speed >= 0)) //left motor changed, turn left when forward
     {
         speed_turned = speed - turn;
         motor.setRightMotorSpeed(speed);
         motor.setLeftMotorSpeed(speed_turned);
-    }else if((turn < 0) && (speed > 0)) //right motor changed, turn right when forward
+    }else if((turn < 0) && (speed >= 0)) //right motor changed, turn right when forward
     {
         speed_turned = speed + turn;
         motor.setRightMotorSpeed(speed_turned);
