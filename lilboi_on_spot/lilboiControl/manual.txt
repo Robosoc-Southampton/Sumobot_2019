@@ -1,0 +1,61 @@
+Manual of chanels for FS-CT6B (pilot)
+Uncertainty of number is +/- 5 (maybe)
+
+The black moving things next to sticks change the range
+so DON'T touch them unless you want that to happen.
+
+Chanel1:
+    -right stick, sideways (horizontal)
+    -left: 1880-1890 (max)
+    -right: 1130-1140 (max)
+    -middle: 1525-1535 (max)
+
+Chanel2:
+    -right stick, up-down (vertical)
+    -up: 1155-1165 (max)
+    -down: 1915-1925 (max)
+    -middle: 1540-1550 (max)
+
+Chanel3:
+    -switch A, right
+    -up: 989-992 (max)
+    -down: 1470-1480 (max)
+
+Chanel4:
+    -left stick, sideways (horizontal)
+    -left: 1192-1102 (max)
+    -right: 1807-1817 (max)
+    -middle: 1465-1476 (max)
+
+Chanel5:
+    -????????
+
+Chanel6:
+    -The same as Chanel1 (????)
+
+
+
+
+
+//Servos PINS:
+left servo -> PIN 9
+
+
+//Receiver PINS:
+//connect to channel 1 on receiver
+byte CH1_PIN = 11;
+//connect to channel 2 on receiver
+byte CH2_PIN = 6;
+//connect to channel 3 on receiver
+byte CH3_PIN = 5;
+//connect to channel 4 on receiver
+byte CH4_PIN = 3;
+
+//Motors PINS:
+byte ENA = 13;
+byte IN1 = 12;
+byte IN2 = 8;
+
+byte IN3 = 7;
+byte IN4 = 4;
+byte ENB = 2;
