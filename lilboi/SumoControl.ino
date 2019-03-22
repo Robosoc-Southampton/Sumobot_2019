@@ -91,6 +91,7 @@ void setup() {
 
     //Servo initialization: PIN connection for servo
     tankservo.attach(9);
+    tankservo.write(0);
 
 
     tankservo_pos = tankservo.read();
@@ -200,14 +201,24 @@ void loop() {
         turn = 0;
     }
 
-    if(turn >0) //left motor changed, turn left
+    if((turn > 0) && (speed > 0)) //left motor changed, turn left when forward
     {
         speed_turned = speed - turn;
         motor.setRightMotorSpeed(speed);
         motor.setLeftMotorSpeed(speed_turned);
-    }else//right motor changed, turn right
+    }else if((turn < 0) && (speed > 0)) //right motor changed, turn right when forward
     {
         speed_turned = speed + turn;
+        motor.setRightMotorSpeed(speed_turned);
+        motor.setLeftMotorSpeed(speed);
+    }else if((turn > 0) && (speed < 0)) //left motor changed, turn left when backward
+    {
+        speed_turned = speed + turn;
+        motor.setRightMotorSpeed(speed);
+        motor.setLeftMotorSpeed(speed_turned);
+    }else if((turn < 0) && (speed < 0)) //left motor changed, turn right when backward
+    {
+        speed_turned = speed - turn;
         motor.setRightMotorSpeed(speed_turned);
         motor.setLeftMotorSpeed(speed);
     }

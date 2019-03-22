@@ -12,6 +12,9 @@
 #define CH2_MID 1545
 #define CH2_HALFRANGE 380L
 
+#define CH2_MAXVAL 2000L
+#define CH2_MINVAL 1000L
+
 //switch A, right
 #define CH3_MID 1200
 
@@ -129,7 +132,10 @@ void setup() {
 
     //Servo initialization: PIN connection for servo
     leftservo.attach(9);
+    leftservo.write(90);
+
     rightservo.attach(10);
+    rightservo.write(90);
 
     leftservo_pos = leftservo.read();
     rightservo_pos = rightservo.read();
@@ -214,55 +220,68 @@ void loop() {
     // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
     //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
     // {
- 
-    //rescaling of speed
-    value_speed = value_speed - CH2_MID;
-    Serial.println(value_speed);
-    speed = -(value_speed*255) / CH2_HALFRANGE;
-    Serial.println(speed);
+    
+    //safety measure if receiver disconnected
+    if((value_speed <= CH2_MAXVAL) && (value_speed >= CH2_MINVAL))
+    {
+        //rescaling of speed
+        value_speed = value_speed - CH2_MID;
+        Serial.println(value_speed);
+        speed = -(value_speed*255) / CH2_HALFRANGE;
+        Serial.println(speed);
 
-    //limiting so its not out of range
-    if(speed > 255)
-    {
-        speed = 255;
-    }else if(speed < -255)
-    {
-        speed = -255;
+        //limiting so its not out of range
+        if(speed > 255)
+        {
+            speed = 255;
+        }else if(speed < -255)
+        {
+            speed = -255;
+        }
+
+        //rescaling of turn, differenc ebetween the motors.
+        //max to the one side, the other motor has opposite speed
+        value_turn = value_turn - CH1_MID;
+        turn = (value_turn * speed * 2) / CH1_HALFRANGE;
+
+        //limiting so its not out of range
+        if(turn > 510) //max speed * 2
+        {
+            turn = 510;
+        }else if(turn < -510)
+        {
+            turn = -510;
+        }
+        //set turn to 0 for too small values
+        if((turn < 40)&&(turn > -40))
+        {
+            turn = 0;
+        }
+
+        if((turn > 0) && (speed > 0)) //left motor changed, turn left when forward
+        {
+            speed_turned = speed - turn;
+            motor.setRightMotorSpeed(speed);
+            motor.setLeftMotorSpeed(speed_turned);
+        }else if((turn < 0) && (speed > 0)) //right motor changed, turn right when forward
+        {
+            speed_turned = speed + turn;
+            motor.setRightMotorSpeed(speed_turned);
+            motor.setLeftMotorSpeed(speed);
+        }else if((turn > 0) && (speed < 0)) //left motor changed, turn left when backward
+        {
+            speed_turned = speed + turn;
+            motor.setRightMotorSpeed(speed);
+            motor.setLeftMotorSpeed(speed_turned);
+        }else if((turn < 0) && (speed < 0)) //left motor changed, turn right when backward
+        {
+            speed_turned = speed - turn;
+            motor.setRightMotorSpeed(speed_turned);
+            motor.setLeftMotorSpeed(speed);
+        }
+        prevvalue_speed = value_speed;
+        prevvalue_turn = value_turn;
     }
-
-    //rescaling of turn, differenc ebetween the motors.
-    //max to the one side, the other motor has opposite speed
-    value_turn = value_turn - CH1_MID;
-    turn = (value_turn * speed * 2) / CH1_HALFRANGE;
-
-    //limiting so its not out of range
-    if(turn > 510) //max speed * 2
-    {
-        turn = 510;
-    }else if(turn < -510)
-    {
-        turn = -510;
-    }
-    //set turn to 0 for too small values
-    if((turn < 40)&&(turn > -40))
-    {
-        turn = 0;
-    }
-
-    if(turn >0) //left motor changed, turn left
-    {
-        speed_turned = speed - turn;
-        motor.setRightMotorSpeed(speed);
-        motor.setLeftMotorSpeed(speed_turned);
-    }else//right motor changed, turn right
-    {
-        speed_turned = speed + turn;
-        motor.setRightMotorSpeed(speed_turned);
-        motor.setLeftMotorSpeed(speed);
-    }
-    prevvalue_speed = value_speed;
-    prevvalue_turn = value_turn;
-
     // }
     //end if of jittery prevention
 
