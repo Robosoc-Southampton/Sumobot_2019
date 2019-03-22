@@ -155,11 +155,12 @@ void loop() {
         }
     }
     tankservo.write(tankservo_pos);
+    delay(5);
 
     //MOTORS:
     value_speed = pulseIn(CH2_PIN, HIGH);
     value_turn = pulseIn(CH1_PIN, HIGH);
-    Serial.println(value_speed);
+    Serial.println(leftstick_value);
 
     //start if of jittery prevention
     // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
@@ -200,12 +201,12 @@ void loop() {
         turn = 0;
     }
 
-    if((turn > 0) && (speed >= 0)) //left motor changed, turn left when forward
+    if((turn > 0) && (speed > 0)) //left motor changed, turn left when forward
     {
         speed_turned = speed - turn;
         motor.setRightMotorSpeed(speed);
         motor.setLeftMotorSpeed(speed_turned);
-    }else if((turn < 0) && (speed >= 0)) //right motor changed, turn right when forward
+    }else if((turn < 0) && (speed > 0)) //right motor changed, turn right when forward
     {
         speed_turned = speed + turn;
         motor.setRightMotorSpeed(speed_turned);
@@ -220,7 +221,11 @@ void loop() {
         speed_turned = speed - turn;
         motor.setRightMotorSpeed(speed_turned);
         motor.setLeftMotorSpeed(speed);
+    }else
+    {
+        motor.setMotorSpeed(speed);
     }
+    
     prevvalue_speed = value_speed;
     prevvalue_turn = value_turn;
 
