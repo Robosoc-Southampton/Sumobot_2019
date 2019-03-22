@@ -4,6 +4,8 @@
 
 // REMEMBER THAT SERVOS NEED TO BE AT 90 WHEN PUT INSIDE THE ROBOT
 
+#define PULSEIN_TIMEOUT 25000
+
 //right stick, left-right (horizontal) - turning
 #define CH1_MID 1530
 #define CH1_HALFRANGE 390L
@@ -120,20 +122,20 @@ void setup() {
     motor.setRightMotorPins(ENB, IN3, IN4);
     motor.setup();
 
-    switch_value = pulseIn(CH3_PIN, HIGH);
-    if(switch_value < CH3_MID)//switch is up
-    {
-        switch_down = false;
+    // switch_value = pulseIn(CH3_PIN, HIGH);
+    // if(switch_value < CH3_MID)//switch is up
+    // {
+    //     switch_down = false;
 
-    }else //switch is down
-    {
-        switch_down = true;
+    // }else //switch is down
+    // {
+    //     switch_down = true;
         
-    }
+    // }
 
-    //previous values from pilot of speed and turn
-    prevvalue_speed = pulseIn(CH2_PIN, HIGH);
-    prevvalue_turn = pulseIn(CH1_PIN, HIGH);
+    // //previous values from pilot of speed and turn
+    // prevvalue_speed = pulseIn(CH2_PIN, HIGH);
+    // prevvalue_turn = pulseIn(CH1_PIN, HIGH);
 }
 
 void loop() {
@@ -183,8 +185,8 @@ void loop() {
     // }
 
     //MOTORS:
-    value_speed = pulseIn(CH2_PIN, HIGH, 25000);
-    value_turn = pulseIn(CH1_PIN, HIGH, 25000);
+    value_speed = pulseIn(CH2_PIN, HIGH, PULSEIN_TIMEOUT);
+    value_turn = pulseIn(CH1_PIN, HIGH, PULSEIN_TIMEOUT);
 
     Serial.println(value_speed);
 
