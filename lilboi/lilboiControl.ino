@@ -1,6 +1,6 @@
 #include "L298.h"
 #include <Servo.h>
-#include <Stepper.h>
+
 
 // REMEMBER THAT SERVOS NEED TO BE AT 90 WHEN PUT INSIDE THE ROBOT
 
@@ -29,31 +29,17 @@
 
 
 //number of step between sponge up and down
-#define SPONGE_DIFF 100
-#define SPONGE_SPEED 100//200
-
-//Stepper motor PINS (sponge pusher)
-int stepperrevolution = 20;//100;
-
-byte IN1_STEPPER = A0;
-byte IN2_STEPPER = A1;
-
-byte IN3_STEPPER = A2;
-byte IN4_STEPPER = A3;
+#define SPONGE_DIFF 10
+#define SPONGE_SPEED 100
 
 
 //Servos:
-Servo leftservo;
-Servo rightservo;
+// Servo tankservo;
 
-int leftservo_pos = 0;
-int rightservo_pos = 0;
+// int tankservo_pos = 0;
 
-int leftservo_pos_next = 0;
-int rightservo_pos_next = 0;
+// int tankservo_pos_next = 0;
 
-int down_leftservo_pos = 0;
-int down_rightservo_pos = 0;
 
 
 
@@ -79,11 +65,6 @@ byte ENB = 2;
 //Motors:
 L298 motor;
 
-//Stepper motor - sponge on bottom
-Stepper sponge(stepperrevolution, IN1_STEPPER, IN2_STEPPER,
-                                    IN3_STEPPER, IN4_STEPPER);
-
-
 
 //driving
 int32_t value_speed = 0;
@@ -98,25 +79,10 @@ int32_t turn = 0;
 //switch A, right and left stick left-right, horizontal
 bool switch_down;
 int switch_value = 0;
-int flip_value = 0;
+int leftstick_value = 0;
 
-//synchronous (almost) movement of front servos (flip thing)
-void flip_front(int dir_up) //1 if up, direction_up
-{
-    leftservo_pos_next = leftservo_pos - FLIP_RIGHTUP;
-    rightservo_pos_next = rightservo_pos + FLIP_RIGHTUP;
-    
-    //move by one each one until satisfieds
-    while((leftservo_pos != leftservo_pos_next) && (rightservo_pos != rightservo_pos_next))
-    {
-        leftservo_pos = leftservo_pos - dir_up;
-        rightservo_pos = rightservo_pos + dir_up;
+bool motordisable = false;
 
-        leftservo.write(leftservo_pos);
-        rightservo.write(rightservo_pos);
-        delay(15); 
-    }
-}
 
 
 void setup() {
@@ -127,22 +93,27 @@ void setup() {
     pinMode(CH4_PIN, INPUT); //left stick - sponge
     Serial.begin(9600);
 
-    //Stepper motor speed TODO check if correct
-    sponge.setSpeed(SPONGE_SPEED);
 
-    //Servo initialization: PIN connection for servo
-    leftservo.attach(9);
-    leftservo.write(90);
+    // //Servo initialization: PIN connection for servo
+    // tankservo.attach(9);
+    // for (int pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+    //     // in steps of 1 degree
+    //     tankservo.write(pos);              // tell servo to go to position in variable 'pos'
+    //     delay(15);                       // waits 15ms for the servo to reach the position
+    // }
+    // for (int pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+    //     tankservo.write(pos);              // tell servo to go to position in variable 'pos'
+    //     delay(15);                       // waits 15ms for the servo to reach the position
+    // }
+    // // tankservo.write(0);
+    // delay(15);
 
-    rightservo.attach(10);
-    rightservo.write(90);
 
-    leftservo_pos = leftservo.read();
-    rightservo_pos = rightservo.read();
+    // tankservo_pos = tankservo.read();
 
-    //starting vlaues of servos
-    down_leftservo_pos = leftservo_pos;
-    down_rightservo_pos = rightservo_pos;
+    // //starting values of servos
+    // down_tankservo_pos = tankservo_pos;
+    // down_rightservo_pos = rightservo_pos;
 
     //motors control initialization, change the pins maybe
     motor.setLeftMotorPins(ENA, IN1, IN2);
@@ -169,66 +140,65 @@ void loop() {
     // put your main code here, to run repeatedly:
 
     //SWITCH A, RIGHT:
-    switch_value = pulseIn(CH3_PIN, HIGH);
-    if((switch_value < CH3_MID) && (switch_down == true))
-    {
-        Serial.println("switch turned up");
+    // switch_value = pulseIn(CH3_PIN, HIGH);
+    // if((switch_value < CH3_MID) && (switch_down == true))
+    // {
+    //     motor.setMotorSpeed(0);
+    //     motordisable = true;
 
-        sponge.step(-SPONGE_DIFF); //TODO check direction
-        switch_down = false;
+    // }else if((switch_value > CH3_MID) && (switch_down == false))
+    // {
+    //     motor.setMotorSpeed(0);
+    //     motordisable = true;
 
-    }else if((switch_value > CH3_MID) && (switch_down == false))
-    {
-        Serial.println("switch turned up");
+    // }
 
-        sponge.step(SPONGE_DIFF);
-        switch_down = true;
-    }
+    // //LEFT STICK, sideways
+    // leftstick_value = pulseIn(CH4_PIN, HIGH);
 
-    //Left stick change
-    flip_value = pulseIn(CH4_PIN, HIGH);
-    if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) //flip up
-    {
-        Serial.println("flip up");
-        // leftservo_pos = leftservo_pos - FLIP_RIGHTUP;
-        // rightservo_pos = rightservo_pos + FLIP_RIGHTUP;
-
-        // leftservo.write(leftservo_pos);
-        // rightservo.write(rightservo_pos);
-        flip_front(FLIP_UP);
-
-    }else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) //flip down
-    {
-        Serial.println("flip down");
-        // leftservo_pos = leftservo_pos + FLIP_RIGHTUP;
-        // rightservo_pos = rightservo_pos - FLIP_RIGHTUP;
-
-        // leftservo.write(leftservo_pos);
-        // rightservo.write(rightservo_pos);
-
-        flip_front(FLIP_DOWN);
-    }
-
-
+    // if(leftstick_value < CH4_LEFT)
+    // {
+    //     for(int i = 0; i<=20; i++)
+    //     {
+    //         tankservo_pos = tankservo_pos + 1;
+    //         if(tankservo_pos > 180) 
+    //         {
+    //             tankservo_pos = 180;
+    //         }
+    //         tankservo.write(tankservo_pos);
+    //         delay(10);
+    //     }
+    // }else if(leftstick_value > CH4_RIGHT)
+    // {
+    //     for(int i = 0; i<=20; i++)
+    //     {
+    //         tankservo_pos = tankservo_pos - 1;
+    //         if(tankservo_pos < 0) 
+    //         {
+    //             tankservo_pos = 0;
+    //         }
+    //         tankservo.write(tankservo_pos);
+    //         delay(10);
+    //     }
+    // }
 
     //MOTORS:
-    value_speed = pulseIn(CH2_PIN, HIGH);
-    value_turn = pulseIn(CH1_PIN, HIGH);
+    value_speed = pulseIn(CH2_PIN, HIGH, 25000);
+    value_turn = pulseIn(CH1_PIN, HIGH, 25000);
+
     Serial.println(value_speed);
 
     //start if of jittery prevention
     // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
     //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
     // {
-    
-    //safety measure if receiver disconnected
-    if((value_speed <= CH2_MAXVAL) && (value_speed >= CH2_MINVAL))
+        
+
+    if((value_speed <= CH2_MAXVAL) && (value_speed >= CH2_MINVAL) && (motordisable == false))
     {
         //rescaling of speed
         value_speed = value_speed - CH2_MID;
-        Serial.println(value_speed);
         speed = -(value_speed*255) / CH2_HALFRANGE;
-        Serial.println(speed);
 
         //limiting so its not out of range
         if(speed > 255)
@@ -282,13 +252,15 @@ void loop() {
         {
             motor.setMotorSpeed(speed);
         }
-        
-        prevvalue_speed = value_speed;
-        prevvalue_turn = value_turn;
     }else
     {
         motor.setMotorSpeed(0);
     }
+    
+    
+    prevvalue_speed = value_speed;
+    prevvalue_turn = value_turn;
+
     // }
     //end if of jittery prevention
 

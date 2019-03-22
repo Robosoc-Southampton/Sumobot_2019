@@ -36,30 +36,19 @@ Chanel6:
 
 
 
-PINS:
-//Stepper motor PINS (sponge pusher)
-int stepperrevolution = 10;
-
-byte IN1_STEPPER = A0;
-byte IN2_STEPPER = A1;
-
-byte IN3_STEPPER = A2;
-byte IN4_STEPPER = A3;
 
 //Servos PINS:
 left servo -> PIN 9
-right servo -> PIN 10
-
 
 
 //Receiver PINS:
-//connect to channel 1 on receiver GREY
+//connect to channel 1 on receiver
 byte CH1_PIN = 11;
-//connect to channel 2 on receiver YELLOW
+//connect to channel 2 on receiver
 byte CH2_PIN = 6;
-//connect to channel 3 on receiver ORANGE
+//connect to channel 3 on receiver
 byte CH3_PIN = 5;
-//connect to channel 4 on receiver GREEN
+//connect to channel 4 on receiver
 byte CH4_PIN = 3;
 
 //Motors PINS:
