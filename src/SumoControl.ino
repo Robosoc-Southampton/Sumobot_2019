@@ -30,10 +30,10 @@
 
 //number of step between sponge up and down
 #define SPONGE_DIFF 100
-#define SPONGE_SPEED 200
+#define SPONGE_SPEED 100//200
 
 //Stepper motor PINS (sponge pusher)
-int stepperrevolution = 100;
+int stepperrevolution = 20//100;
 
 byte IN1_STEPPER = A0;
 byte IN2_STEPPER = A1;
@@ -278,9 +278,16 @@ void loop() {
             speed_turned = speed - turn;
             motor.setRightMotorSpeed(speed_turned);
             motor.setLeftMotorSpeed(speed);
+        }else
+        {
+            motor.setMotorSpeed(0);
         }
+        
         prevvalue_speed = value_speed;
         prevvalue_turn = value_turn;
+    }else
+    {
+        motor.setMotorSpeed(0);
     }
     // }
     //end if of jittery prevention
