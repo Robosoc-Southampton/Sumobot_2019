@@ -29,8 +29,8 @@
 
 
 //number of step between sponge up and down
-#define SPONGE_DIFF 10
-#define SPONGE_SPEED 200
+#define SPONGE_DIFF 100
+#define SPONGE_SPEED 1000
 
 //Stepper motor PINS (sponge pusher)
 int stepperrevolution = 20;//100;
@@ -167,27 +167,24 @@ void setup() {
 }
 
 void loop() {
-    // put your main code here, to run repeatedly:
+    switch_value = pulseIn(CH4_PIN, HIGH, 25000);
 
-    switch_value = pulseIn(CH3_PIN, HIGH, 25000);
-
-    if (switch_value < CH3_MID - 100) {
+    if (switch_value < CH4_LEFT) {
         Serial.println("switch turned up");
         sponge.step(-SPONGE_DIFF);
     }
-    else if (switch_value > CH3_MID + 100) {
+    else if (switch_value > CH4_RIGHT) {
         Serial.println("switch turned up");
         sponge.step(SPONGE_DIFF);
     }
 
-    //Left stick change
-    flip_value = pulseIn(CH4_PIN, HIGH, 25000);
+    flip_value = pulseIn(CH3_PIN, HIGH, 25000);
 
-    if (flip_value <= CH4_LEFT && rightservo_pos <= down_rightservo_pos) {
+    if (flip_value <= CH3_MID - 100 && rightservo_pos <= down_rightservo_pos) {
         Serial.println("flip up");
         flip_front(FLIP_UP);
     }
-    else if (flip_value >= CH4_RIGHT && rightservo_pos >= down_rightservo_pos) {
+    else if (flip_value >= CH3_MID + 100 && rightservo_pos >= down_rightservo_pos) {
         Serial.println("flip down");
         flip_front(FLIP_DOWN);
     }
