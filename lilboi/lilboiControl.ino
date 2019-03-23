@@ -22,26 +22,12 @@
 #define CH4_LEFT 1400
 #define CH4_RIGHT 1540
 
-//Servos movement restriction (for left one)
-#define FLIP_RIGHTUP 45
-#define FLIP_UP 1
-#define FLIP_DOWN -1
-
-
-//number of step between sponge up and down
-#define SPONGE_DIFF 10
-#define SPONGE_SPEED 100
-
-
 //Servos:
 // Servo tankservo;
 
 // int tankservo_pos = 0;
 
 // int tankservo_pos_next = 0;
-
-
-
 
 //Receiver PINS:
 //connect to channel 1 on receiver GREY
@@ -120,17 +106,6 @@ void setup() {
     motor.setRightMotorPins(ENB, IN3, IN4);
     motor.setup();
 
-    switch_value = pulseIn(CH3_PIN, HIGH);
-    if(switch_value < CH3_MID)//switch is up
-    {
-        switch_down = false;
-
-    }else //switch is down
-    {
-        switch_down = true;
-        
-    }
-
     //previous values from pilot of speed and turn
     prevvalue_speed = pulseIn(CH2_PIN, HIGH);
     prevvalue_turn = pulseIn(CH1_PIN, HIGH);
@@ -188,82 +163,34 @@ void loop() {
 
     Serial.println(value_speed);
 
-    //start if of jittery prevention
-    // if(((value_speed - prevvalue_speed) < 20) && ((value_speed - prevvalue_speed) > -20))
-    //     || (((value_turn - prevvalue_turn) < 20) && ((value_turn - prevvalue_turn) > -20))
-    // {
-        
+    if (value_speed <= CH2_MAXVAL && value_speed >= CH2_MINVAL) {
+        float left_speed_scale_fwd = (float) (value_speed - CH2_MID) / (float) CH2_HALFRANGE;
+        float left_speed_scale_trn = -(float) (value_turn - CH1_MID) * 0.5 / (float) CH1_HALFRANGE;
 
-    if((value_speed <= CH2_MAXVAL) && (value_speed >= CH2_MINVAL) && (motordisable == false))
-    {
-        //rescaling of speed
-        value_speed = value_speed - CH2_MID;
-        speed = -(value_speed*255) / CH2_HALFRANGE;
+        if (left_speed_scale_fwd < 0.1) left_speed_scale_trn = -left_speed_scale_trn;
 
-        //limiting so its not out of range
-        if(speed > 255)
-        {
-            speed = 255;
-        }else if(speed < -255)
-        {
-            speed = -255;
-        }
+        float left_speed_scale = left_speed_scale_trn + left_speed_scale_fwd;
 
-        //rescaling of turn, differenc ebetween the motors.
-        //max to the one side, the other motor has opposite speed
-        value_turn = value_turn - CH1_MID;
-        turn = (value_turn * speed * 2) / CH1_HALFRANGE;
+        if (left_speed_scale < -1) left_speed_scale = -1;
+        if (left_speed_scale > 1) left_speed_scale = 1;
 
-        //limiting so its not out of range
-        if(turn > 510) //max speed * 2
-        {
-            turn = 510;
-        }else if(turn < -510)
-        {
-            turn = -510;
-        }
-        //set turn to 0 for too small values
-        if((turn < 40)&&(turn > -40))
-        {
-            turn = 0;
-        }
+        float right_speed_scale_fwd = (float) (value_speed - CH2_MID) / CH2_HALFRANGE;
+        float right_speed_scale_trn = (float) (value_turn - CH1_MID) * 0.5 / CH1_HALFRANGE;
 
-        if((turn > 0) && (speed > 0)) //left motor changed, turn left when forward
-        {
-            speed_turned = speed - turn;
-            motor.setRightMotorSpeed(speed);
-            motor.setLeftMotorSpeed(speed_turned);
-        }else if((turn < 0) && (speed > 0)) //right motor changed, turn right when forward
-        {
-            speed_turned = speed + turn;
-            motor.setRightMotorSpeed(speed_turned);
-            motor.setLeftMotorSpeed(speed);
-        }else if((turn > 0) && (speed < 0)) //left motor changed, turn left when backward
-        {
-            speed_turned = speed + turn;
-            motor.setRightMotorSpeed(speed);
-            motor.setLeftMotorSpeed(speed_turned);
-        }else if((turn < 0) && (speed < 0)) //left motor changed, turn right when backward
-        {
-            speed_turned = speed - turn;
-            motor.setRightMotorSpeed(speed_turned);
-            motor.setLeftMotorSpeed(speed);
-        }else
-        {
-            motor.setMotorSpeed(speed);
-        }
-    }else
-    {
+        if (right_speed_scale_fwd < 0.1) right_speed_scale_trn = -right_speed_scale_trn;
+
+        float right_speed_scale = right_speed_scale_trn + right_speed_scale_fwd;
+
+        if (right_speed_scale < -1) right_speed_scale = -1;
+        if (right_speed_scale > 1) right_speed_scale = 1;
+
+        motor.setLeftMotorSpeed((int) (left_speed_scale * 255));
+        motor.setRightMotorSpeed((int) (right_speed_scale * 255));
+    }
+    else {
         motor.setMotorSpeed(0);
     }
     
-    
     prevvalue_speed = value_speed;
     prevvalue_turn = value_turn;
-
-    // }
-    //end if of jittery prevention
-
-    //delay so the motors can actually move
-    delay(5);
 }
