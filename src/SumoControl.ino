@@ -183,78 +183,42 @@ void loop() {
     //Left stick change
     flip_value = pulseIn(CH4_PIN, HIGH, 25000);
 
-    if((flip_value <= CH4_LEFT)&&(rightservo_pos <= down_rightservo_pos)) {
+    if (flip_value <= CH4_LEFT && rightservo_pos <= down_rightservo_pos) {
         Serial.println("flip up");
         flip_front(FLIP_UP);
     }
-    else if((flip_value >= CH4_RIGHT)&&(rightservo_pos >= down_rightservo_pos)) {
+    else if (flip_value >= CH4_RIGHT && rightservo_pos >= down_rightservo_pos) {
         Serial.println("flip down");
         flip_front(FLIP_DOWN);
     }
 
     value_speed = pulseIn(CH2_PIN, HIGH, 25000);
     value_turn = pulseIn(CH1_PIN, HIGH, 25000);
-    Serial.println(value_speed);
 
     //safety measure if receiver disconnected
     if (value_speed <= CH2_MAXVAL && value_speed >= CH2_MINVAL) {
-        //rescaling of speed
-        value_speed = value_speed - CH2_MID;
-        Serial.println(value_speed);
-        speed = -(value_speed*255) / CH2_HALFRANGE;
-        Serial.println(speed);
+        float left_speed_scale_fwd = (float) (value_speed - CH2_MID) / (float) CH2_HALFRANGE;
+        float left_speed_scale_trn = -(float) (value_turn - CH1_MID) * 0.5 / (float) CH1_HALFRANGE;
 
-        //limiting so its not out of range
-        if (speed > 255) {
-            speed = 255;
-        }
-        else if (speed < -255) {
-            speed = -255;
-        }
+        if (left_speed_scale_fwd < 0.1) left_speed_scale_trn = -left_speed_scale_trn;
 
-        //rescaling of turn, differenc ebetween the motors.
-        //max to the one side, the other motor has opposite speed
-        value_turn = value_turn - CH1_MID;
-        turn = (value_turn * speed * 2) / CH1_HALFRANGE;
+        float left_speed_scale = left_speed_scale_trn + left_speed_scale_fwd;
 
-        //limiting so its not out of range
-        if (turn > 510) {
-            turn = 510;
-        }
-        else if (turn < -510) {
-            turn = -510;
-        }
-        
-        if (turn < 40 && turn > -40) {
-            turn = 0;
-        }
+        if (left_speed_scale < -1) left_speed_scale = -1;
+        if (left_speed_scale > 1) left_speed_scale = 1;
 
-        if (turn > 0 && speed > 0) {
-            speed_turned = speed - turn;
-            motor.setRightMotorSpeed(speed);
-            motor.setLeftMotorSpeed(speed_turned);
-        }
-        else if (turn < 0 && speed > 0) {
-            speed_turned = speed + turn;
-            motor.setRightMotorSpeed(speed_turned);
-            motor.setLeftMotorSpeed(speed);
-        }
-        else if (turn > 0 && speed < 0) {
-            speed_turned = speed + turn;
-            motor.setRightMotorSpeed(speed);
-            motor.setLeftMotorSpeed(speed_turned);
-        }
-        else if (turn < 0 && speed < 0) {
-            speed_turned = speed - turn;
-            motor.setRightMotorSpeed(speed_turned);
-            motor.setLeftMotorSpeed(speed);
-        }
-        else {
-            motor.setMotorSpeed(speed);
-        }
-        
-        prevvalue_speed = value_speed;
-        prevvalue_turn = value_turn;
+        float right_speed_scale_fwd = (float) (value_speed - CH2_MID) / CH2_HALFRANGE;
+        float right_speed_scale_trn = (float) (value_turn - CH1_MID) * 0.5 / CH1_HALFRANGE;
+
+        if (right_speed_scale_fwd < 0.1) right_speed_scale_trn = -right_speed_scale_trn;
+
+        float right_speed_scale = right_speed_scale_trn + right_speed_scale_fwd;
+
+        if (right_speed_scale < -1) right_speed_scale = -1;
+        if (right_speed_scale > 1) right_speed_scale = 1;
+
+        motor.setLeftMotorSpeed(-(int) (left_speed_scale * 255));
+        motor.setRightMotorSpeed(-(int) (right_speed_scale * 255));
     }
     else {
         motor.setMotorSpeed(0);
